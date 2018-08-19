@@ -257,7 +257,7 @@ var handlers = {
         data: newProject
       }).then(response => {
         if ((response.data.STATUS = "OK")) {
-          this.response.speak(newProject.project.name + " is Created");
+          this.response.speak(newProject.project.name + " was created");
           this.emit(":responseReady");
         } else {
           this.response.speak("An error occured while creating a project");
@@ -269,10 +269,7 @@ var handlers = {
     "DeleteProjectIntent": function() {
       var projectName = this.event.request.intent.slots.projectname.value;
       //.replace() method to remove all the special characters
-      var projectName_USER = projectName
-
-        .replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "")
-        .toLowerCase();
+      var projectName_USER = projectName.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "").toLowerCase();
 
       var projectId = "";
 
@@ -281,8 +278,8 @@ var handlers = {
         url: "https://alexalapraim.teamwork.com/projects.json",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: auth
+          "Accept": "application/json",
+          "Authorization": auth
         }
       })
         .then(response => {
@@ -292,10 +289,7 @@ var handlers = {
           } else {
             for (let i = 0; i < response.data.projects.length; i++) {
               var projectName_TW = response.data.projects[i].name;
-              var projectName_TWLC = projectName_TW
-                //.replace() method to remove all the special characters
-                .replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "")
-                .toLowerCase();
+              var projectName_TWLC = projectName_TW.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "").toLowerCase();
               //console.log(newProjectName);
               if (projectName_TWLC === projectName_USER) {
                 projectId = response.data.projects[i].id;
@@ -318,7 +312,7 @@ var handlers = {
             }
           }).then(response => {
             if (response.data.STATUS == "OK") {
-              this.response.speak(projectName + " is deleted");
+              this.response.speak(projectName + " was deleted");
               this.emit(":responseReady");
             } else {
               this.response.speak(
