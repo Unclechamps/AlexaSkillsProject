@@ -5,9 +5,9 @@ var axios = require('axios');
 var Alexa = require('alexa-sdk');
 
 // Setting up access to API //
-var key = 'twp_8ERiNvMekc5pqzoJ5V6b80IunZjx';
-var password = 'alexa2018';
-var auth = "Basic " + new Buffer.from(key + ":" + password).toString("base64");
+// var key = 'twp_8ERiNvMekc5pqzoJ5V6b80IunZjx';
+// var password = 'alexa2018';
+// var auth = "Basic " + new Buffer.from(key + ":" + password).toString("base64");
 
 // Capturing dates needed for queries //
 var date = new Date();
@@ -36,6 +36,40 @@ var handlers = {
     this.emit(':responseReady');
 
   },
+
+"userListOfProjects": function() {
+
+  var token = this.event.context.System.user.accessToken;
+
+  axios({
+    method: 'get',
+    url:"https://alexalapraim.teamwork.com/projects.json?status=ACTIVE",
+    headers: {
+            'Content-Type' : 'application/json',
+            'Accept' : 'application/json',
+            'Authorization' : "Bearer " + token
+    }
+  }).then((response) => {
+    if(response.data.projects.length === 0) {
+      this.response.speak("The are no projects assigned to you.");
+      this.emit(":responseReady")
+    } else {
+
+      var totalProjects = []
+
+      for (let i=0; i <response.data.projects.length; i++) {
+        var projectName = response.data.projects[i].name
+
+        totalProjects.push(projectName)
+      }
+
+      var responseString = "The following projects were assigned to you: " + totalProjects.join(", ");
+
+      this.response.speak(responseString);
+      this.emit(":responseReady")
+    }
+  })
+},
 
 
 // Responds when user asks foro open overdue tasks //
@@ -92,13 +126,16 @@ var handlers = {
 },
 
 "completedTasksIntent": function() {
+
+    var token = this.event.context.System.user.accessToken;
+
     axios({
       method: 'get',
       url:"https://alexalapraim.teamwork.com/completedtasks.json?startdate="+yesterday+"&enddate="+today,
       headers: {
               'Content-Type' : 'application/json',
               'Accept' : 'application/json',
-              'Authorization' : auth
+              'Authorization' : "Bearer " + token
       }
     }).then((response) => {
       if(response.data.tasks.length === 0) {
@@ -141,9 +178,11 @@ var handlers = {
 
   'projectStatusIntent': function() {
     var project = this.event.request.intent.slots.projectName.value;
-    var projectName = project.toLowerCase()
+    var projectName = project.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').toLowerCase()
     // var projectName = "Alexa"
     var projectId = 0;
+
+    var token = this.event.context.System.user.accessToken;
 
     axios({
       method: "get",
@@ -151,7 +190,7 @@ var handlers = {
       headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",
-        "Authorization": auth
+        'Authorization' : "Bearer " + token
       }
     }).then(response => {
       // console.log(response.data.projects[0].name)
@@ -162,8 +201,8 @@ var handlers = {
         var projectId = ''
         for (let i = 0; i < response.data.projects.length; i++) {
 
-          var projectTW = response.data.projects[i].name
-          var projectTWLC = projectTW.toLowerCase().replaceAll("[-+.^:,]","");
+          var projectTW = response.data.projects[i].name;
+          var projectTWLC = projectTW.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, '').toLowerCase();
 
           if (projectTWLC === projectName) {
 
@@ -184,7 +223,7 @@ var handlers = {
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "Authorization": auth
+            'Authorization' : "Bearer " + token
           }
         }).then(response => {
           if (response.data["todo-items"].length === 0) {
@@ -203,10 +242,19 @@ var handlers = {
                 response.data["todo-items"][i]["responsible-party-firstname"];
 
               let startDate = response.data["todo-items"][i]["start-date"];
-              let dueDate = response.data["todo-items"][i]["due-date"];
-              //let formatted_startDate = formatDate(startDate);
+              let startDateDFormat = startDate.replace(
+               /(\d\d\d\d)(\d\d)(\d\d)/,
+               "$1/$2/$3"
+             );
 
-              let stringAlexa = "Task " + taskNumber + ", " + taskContent + " is assigned to " + responsiblePerson + ", on " + startDate + " and due on " + dueDate + ".";
+              let dueDate = response.data["todo-items"][i]["due-date"];
+              let dueDateDFormat = dueDate.replace(
+               /(\d\d\d\d)(\d\d)(\d\d)/,
+               "$1/$2/$3"
+             );
+
+
+              let stringAlexa = "Task " + taskNumber + ", " + taskContent + " is assigned to " + responsiblePerson + " with a due date of " + dueDateDFormat + ".";
 
               totalTasksArray.push(stringAlexa);
             }
@@ -217,7 +265,7 @@ var handlers = {
               this.response.speak(responseString);
               this.emit(":responseReady");
             } else {
-              var responseString = "A total of " + totalTasks + " tasks are assigned for " + projectName + " project. " + totalTasksArray.join(" ");
+              var responseString = "A total of " + totalTasks + " tasks are currently open for the " + projectName + " project. " + totalTasksArray.join(" ");
 
               this.response.speak(responseString);
               this.emit(":responseReady");
@@ -228,6 +276,9 @@ var handlers = {
     },
 
     "createProjectIntent": function() {
+
+      var token = this.event.context.System.user.accessToken;
+
       let projectName = this.event.request.intent.slots.projectname.value;
       let projectDescription = this.event.request.intent.slots.projectdescription.value;
       let startDate_String = this.event.request.intent.slots.startdate.value;
@@ -252,7 +303,7 @@ var handlers = {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          "Authorization": auth
+          'Authorization' : "Bearer " + token
         },
         data: newProject
       }).then(response => {
@@ -266,12 +317,14 @@ var handlers = {
       });
     },
 
-    "DeleteProjectIntent": function() {
+    "deleteProjectIntent": function() {
       var projectName = this.event.request.intent.slots.projectname.value;
       //.replace() method to remove all the special characters
       var projectName_USER = projectName.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "").toLowerCase();
 
       var projectId = "";
+
+      var token = this.event.context.System.user.accessToken;
 
       axios({
         method: "get",
@@ -279,7 +332,7 @@ var handlers = {
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          "Authorization": auth
+          'Authorization' : "Bearer " + token
         }
       })
         .then(response => {
@@ -307,8 +360,8 @@ var handlers = {
 
             headers: {
               "Content-Type": "application/json",
-              Accept: "application/json",
-              Authorization: auth
+              "Accept": "application/json",
+              'Authorization' : "Bearer " + token
             }
           }).then(response => {
             if (response.data.STATUS == "OK") {
