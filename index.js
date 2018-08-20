@@ -14,7 +14,7 @@ var date = new Date();
 var year = date.getFullYear();
 var month = date.getMonth()+1;
 var dt = date.getDate();
-var ydt = date.getDate()-1;
+var ydt = date.getDate()-1;   
 
 if (dt < 10) {
   dt = '0' + dt;
