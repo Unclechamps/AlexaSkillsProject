@@ -279,8 +279,8 @@ var handlers = {
 
       var token = this.event.context.System.user.accessToken;
 
-      let projectName = this.event.request.intent.slots.projectname.value;
-      let projectDescription = this.event.request.intent.slots.projectdescription.value;
+      let projectName = this.event.request.intent.slots.projectName.value;
+      let projectDescription = this.event.request.intent.slots.projectDescription.value;
       let startDate_String = this.event.request.intent.slots.startdate.value;
       let endDate_String = this.event.request.intent.slots.enddate.value;
 
