@@ -318,7 +318,7 @@ var handlers = {
     },
 
     "deleteProjectIntent": function() {
-      var projectName = this.event.request.intent.slots.projectname.value;
+      var projectName = this.event.request.intent.slots.projectName.value;
       //.replace() method to remove all the special characters
       var projectName_USER = projectName.replace(/[&\/\\#,+()$~%.'":*?<>{}]/g, "").toLowerCase();
 
