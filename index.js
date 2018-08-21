@@ -4,17 +4,13 @@
 var axios = require('axios');
 var Alexa = require('alexa-sdk');
 
-// Setting up access to API //
-// var key = 'twp_8ERiNvMekc5pqzoJ5V6b80IunZjx';
-// var password = 'alexa2018';
-// var auth = "Basic " + new Buffer.from(key + ":" + password).toString("base64");
-
 // Capturing dates needed for queries //
 var date = new Date();
 var year = date.getFullYear();
 var month = date.getMonth()+1;
 var dt = date.getDate();
-var ydt = date.getDate()-1;   
+var ydt = date.getDate()-1;
+var tdt = date.getDate()+1;
 
 if (dt < 10) {
   dt = '0' + dt;
@@ -25,10 +21,11 @@ if (month < 10) {
 
 var today = year.toString()+month.toString()+dt.toString()
 var yesterday = year.toString()+month.toString()+ydt.toString()
-
+var tomorrow = year.toString()+month.toString()+tdt.toString()
 
 // Alexa handlers //
 var handlers = {
+
 
 // Responds when no utternaces are present : e.g. "Open Digital Crafts" //
 "LaunchRequest": function() {
@@ -284,9 +281,12 @@ var handlers = {
       let startDate_String = this.event.request.intent.slots.startdate.value;
       let endDate_String = this.event.request.intent.slots.enddate.value;
 
-      let startDate = new Date(startDate_String).toISOString().slice(0, 10).replace(/-/g, "");
+      if(startDate_String && endDate_String) {
 
-      let endDate = new Date(endDate_String).toISOString().slice(0, 10).replace(/-/g, "");
+        var startDate = new Date(startDate_String).toISOString().slice(0, 10).replace(/-/g, "");
+
+        var endDate = new Date(endDate_String).toISOString().slice(0, 10).replace(/-/g, "");
+      }
 
       let newProject = {
         project: {
@@ -311,9 +311,14 @@ var handlers = {
           this.response.speak(newProject.project.name + " was created");
           this.emit(":responseReady");
         } else {
-          this.response.speak("An error occured while creating a project");
+          this.response.speak("An error occured while creating the project");
           this.emit(":responseReady");
         }
+      }).catch(error => {
+        var errorMessage = error.response.statusText
+
+        this.response.speak("An error occured while creating the project. This project " + errorMessage);
+        this.emit(":responseReady")
       });
     },
 
